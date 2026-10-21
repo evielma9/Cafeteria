@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusBites - Cafetería Escolar (Realtime DB)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase App (v9 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <!-- Firebase Realtime Database SDK (v9 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 min-h-screen pb-12">
+
+    <!-- TOP HEADER -->
+    <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i data-lucide="utensils-crossed" class="w-7 h-7 text-yellow-300"></i>
+                <h1 class="text-xl font-bold tracking-wide">CampusBites <span class="text-xs font-normal bg-indigo-800 px-2 py-0.5 rounded-full text-indigo-200">Cafetería Escolar</span></h1>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span id="db-status-badge" class="inline-flex items-center gap-1.5 text-xs bg-indigo-900/60 text-indigo-200 px-3 py-1 rounded-full border border-indigo-500/30 font-medium">
+                    <span id="db-indicator-dot" class="w-2 h-2 rounded-full bg-amber-400"></span> 
+                    <span id="db-status-text">Conectando a Realtime DB...</span>
+                </span>
+
+                <div id="user-info-bar" class="hidden flex items-center gap-2 border-l border-indigo-600 pl-3">
+                    <div class="text-right text-xs">
+                        <p id="user-display-name" class="font-semibold"></p>
+                        <p id="user-display-role" class="text-indigo-300 capitalize"></p>
+                    </div>
+                    <button onclick="logout()" class="p-1.5 hover:bg-indigo-600 rounded-lg text-indigo-200 hover:text-white" title="Cerrar Sesión">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- AUTH SCREEN -->
+        <section id="auth-screen" class="max-w-md mx-auto my-8 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="bg-indigo-600 p-6 text-white text-center">
+                <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
+                    <i data-lucide="coffee" class="w-8 h-8 text-yellow-300"></i>
+                </div>
+                <h2 class="text-2xl font-bold">Bienvenido a CampusBites</h2>
+                <p class="text-indigo-200 text-sm mt-1">Pide tu comida con anticipación y evita filas</p>
+            </div>
+
+            <div class="p-6">
+                <div class="flex border-b border-gray-200 mb-6">
+                    <button id="tab-login-btn" onclick="switchAuthTab('login')" class="flex-1 py-2 font-semibold text-center text-indigo-600 border-b-2 border-indigo-600">Iniciar Sesión</button>
+                    <button id="tab-register-btn" onclick="switchAuthTab('register')" class="flex-1 py-2 font-semibold text-center text-gray-500 hover:text-gray-700">Registrarse</button>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Matrícula / ID</label>
+                        <input type="text" id="login-id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="ej. alumno123 o admin">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Contraseña</label>
+                        <input type="password" id="login-password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition shadow-md">Ingresar</button>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Nombre Completo</label>
+                        <input type="text" id="reg-name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Juan Pérez">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Matrícula o Usuario</label>
+                        <input type="text" id="reg-id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="A01234567">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Tipo de Usuario</label>
+                        <select id="reg-role" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                            <option value="student">Alumno</option>
+                            <option value="admin">Personal de Cafetería / Admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Contraseña</label>
+                        <input type="password" id="reg-password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition shadow-md">Crear Cuenta</button>
+                </form>
+
+                <div class="mt-6 pt-4 border-t border-gray-100 text-xs text-gray-500">
+                    <p class="font-semibold text-gray-700 mb-1">Cuentas demo listas:</p>
+                    <ul class="space-y-1">
+                        <li>🎓 <b>Alumno:</b> <code class="bg-gray-100 px-1 py-0.5 rounded">alumno123</code> | Pass: <code class="bg-gray-100 px-1 py-0.5 rounded">123456</code></li>
+                        <li>👨‍🍳 <b>Cafetería:</b> <code class="bg-gray-100 px-1 py-0.5 rounded">admin</code> | Pass: <code class="bg-gray-100 px-1 py-0.5 rounded">admin123</code></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- STUDENT PORTAL -->
+        <div id="student-portal" class="hidden space-y-6">
+            <div class="flex border-b border-gray-200 bg-white rounded-xl shadow-sm p-1">
+                <button id="student-tab-menu" onclick="switchStudentTab('menu')" class="flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition bg-indigo-50 text-indigo-700">
+                    <i data-lucide="utensils" class="w-4 h-4"></i> Hacer Pedido
+                </button>
+                <button id="student-tab-orders" onclick="switchStudentTab('orders')" class="flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm text-gray-600 hover:text-indigo-600 flex items-center justify-center gap-2 transition">
+                    <i data-lucide="clock" class="w-4 h-4"></i> Mis Pedidos
+                    <span id="my-orders-count" class="bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
+                </button>
+            </div>
+
+            <!-- STUDENT MENU VIEW -->
+            <div id="student-menu-view" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                        <button onclick="filterCategory('all')" class="cat-filter-btn active bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shadow-sm">Todos</button>
+                        <button onclick="filterCategory('desayunos')" class="cat-filter-btn bg-white hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shadow-sm border border-gray-200">🍳 Desayunos</button>
+                        <button onclick="filterCategory('comidas')" class="cat-filter-btn bg-white hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shadow-sm border border-gray-200">🍔 Comida Formal</button>
+                        <button onclick="filterCategory('snacks')" class="cat-filter-btn bg-white hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shadow-sm border border-gray-200">🍟 Snacks / Chuchulucos</button>
+                        <button onclick="filterCategory('bebidas')" class="cat-filter-btn bg-white hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shadow-sm border border-gray-200">🥤 Sodas y Bebidas</button>
+                    </div>
+
+                    <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                </div>
+
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sticky top-20">
+                        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+                            <h3 class="font-bold text-lg flex items-center gap-2 text-gray-800">
+                                <i data-lucide="shopping-bag" class="w-5 h-5 text-indigo-600"></i> Tu Pedido
+                            </h3>
+                            <button onclick="clearCart()" class="text-xs text-red-500 hover:text-red-700 font-medium">Vaciar</button>
+                        </div>
+
+                        <div id="cart-items" class="py-4 space-y-3 max-h-60 overflow-y-auto"></div>
+
+                        <div id="cart-summary" class="border-t border-gray-100 pt-4 space-y-4">
+                            <div class="flex justify-between items-center text-lg font-bold text-gray-900">
+                                <span>Total:</span>
+                                <span id="cart-total-price" class="text-indigo-600">$0.00</span>
+                            </div>
+
+                            <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                                <label class="block text-xs font-semibold text-indigo-900 mb-1 flex items-center gap-1">
+                                    <i data-lucide="alarm-clock" class="w-4 h-4 text-indigo-600"></i> Hora de Entrega Solicitada
+                                </label>
+                                <input type="time" id="pickup-time" required class="w-full px-3 py-2 bg-white border border-indigo-200 rounded-lg text-sm font-bold text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Notas para la cocina</label>
+                                <input type="text" id="order-notes" placeholder="ej. Sin mayonesa, cubiertos extra..." class="w-full text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            </div>
+
+                            <button onclick="submitOrder()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                                <i data-lucide="check-circle" class="w-5 h-5"></i> Confirmar y Enviar Pedido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STUDENT ORDERS TRACKING VIEW -->
+            <div id="student-orders-view" class="hidden">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="receipt" class="w-5 h-5 text-indigo-600"></i> Historial y Estatus de Pedidos
+                    </h3>
+                    <div id="student-orders-list" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAFETERIA ADMIN PORTAL -->
+        <div id="admin-portal" class="hidden space-y-6">
+            <div class="flex border-b border-gray-200 bg-white rounded-xl shadow-sm p-1">
+                <button id="admin-tab-orders-btn" onclick="switchAdminTab('orders')" class="flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition bg-indigo-50 text-indigo-700">
+                    <i data-lucide="kanban" class="w-4 h-4"></i> Tablero de Pedidos
+                </button>
+                <button id="admin-tab-inventory-btn" onclick="switchAdminTab('inventory')" class="flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm text-gray-600 hover:text-indigo-600 flex items-center justify-center gap-2 transition">
+                    <i data-lucide="sliders" class="w-4 h-4"></i> Gestor de Menú y Precios
+                </button>
+            </div>
+
+            <!-- ADMIN TAB 1: KANBAN -->
+            <div id="admin-orders-tab-content">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Control de Pedidos en Cocina</h2>
+                        <p class="text-xs text-gray-500">Sincronización en tiempo real con Firebase Realtime Database</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Pending -->
+                    <div class="bg-amber-50/60 rounded-2xl p-4 border border-amber-200/60 flex flex-col min-h-[500px]">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-amber-200">
+                            <span class="font-bold text-amber-900 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-amber-500"></span> Pendientes
+                            </span>
+                            <span id="count-pending" class="bg-amber-200 text-amber-900 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                        </div>
+                        <div id="col-pending" class="space-y-3 flex-1 overflow-y-auto"></div>
+                    </div>
+
+                    <!-- Preparing -->
+                    <div class="bg-blue-50/60 rounded-2xl p-4 border border-blue-200/60 flex flex-col min-h-[500px]">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-blue-200">
+                            <span class="font-bold text-blue-900 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-blue-500"></span> En Preparación
+                            </span>
+                            <span id="count-preparing" class="bg-blue-200 text-blue-900 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                        </div>
+                        <div id="col-preparing" class="space-y-3 flex-1 overflow-y-auto"></div>
+                    </div>
+
+                    <!-- Ready / Delivered -->
+                    <div class="bg-emerald-50/60 rounded-2xl p-4 border border-emerald-200/60 flex flex-col min-h-[500px]">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-emerald-200">
+                            <span class="font-bold text-emerald-900 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span> Listos / Entregados
+                            </span>
+                            <span id="count-ready" class="bg-emerald-200 text-emerald-900 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                        </div>
+                        <div id="col-ready" class="space-y-3 flex-1 overflow-y-auto"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADMIN TAB 2: MENU MANAGER -->
+            <div id="admin-inventory-tab-content" class="hidden space-y-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Catálogo de Productos, Precios y Fotos</h2>
+                        <p class="text-xs text-gray-500">Los cambios se aplican inmediatamente para todos los alumnos</p>
+                    </div>
+                    <button onclick="openProductModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 shadow-sm transition">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i> Nuevo Producto
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold">
+                                    <th class="p-4">Imagen</th>
+                                    <th class="p-4">Producto</th>
+                                    <th class="p-4">Categoría</th>
+                                    <th class="p-4">Precio</th>
+                                    <th class="p-4">Opciones</th>
+                                    <th class="p-4 text-center">Estado</th>
+                                    <th class="p-4 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL CUSTOMIZE ITEM -->
+    <div id="custom-item-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-gray-100">
+            <div class="relative h-48 bg-gray-200">
+                <img id="modal-item-img" src="" class="w-full h-full object-cover" alt="">
+                <button onclick="closeCustomModal()" class="absolute top-3 right-3 bg-black/60 hover:bg-black text-white p-1.5 rounded-full backdrop-blur-sm">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+                <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold" id="modal-item-category"></div>
+            </div>
+            
+            <div class="p-5 space-y-4">
+                <div>
+                    <div class="flex justify-between items-start">
+                        <h3 id="modal-item-title" class="font-bold text-xl text-gray-800"></h3>
+                        <span id="modal-item-price" class="text-lg font-bold text-indigo-600"></span>
+                    </div>
+                    <p id="modal-item-desc" class="text-xs text-gray-500 mt-1"></p>
+                </div>
+
+                <div id="modal-options-container" class="space-y-2 border-t border-b border-gray-100 py-3">
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Personaliza tu pedido:</label>
+                    <div id="modal-options-list" class="space-y-1.5"></div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Nota específica:</label>
+                    <input type="text" id="modal-item-note" placeholder="ej. Extra salsa, muy tostado..." class="w-full text-xs px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <span class="text-sm font-semibold text-gray-700">Cantidad:</span>
+                    <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                        <button onclick="adjustModalQty(-1)" class="px-3 py-1 bg-gray-100 font-bold">-</button>
+                        <span id="modal-qty" class="px-4 py-1 font-bold text-sm">1</span>
+                        <button onclick="adjustModalQty(1)" class="px-3 py-1 bg-gray-100 font-bold">+</button>
+                    </div>
+                </div>
+
+                <button onclick="confirmAddToCart()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                    <i data-lucide="plus" class="w-5 h-5"></i> Agregar al Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT / NEW PRODUCT -->
+    <div id="admin-product-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-gray-100">
+            <div class="bg-indigo-700 px-6 py-4 text-white flex justify-between items-center">
+                <h3 id="admin-modal-title" class="font-bold text-lg">Editar Producto</h3>
+                <button onclick="closeProductModal()" class="text-indigo-200 hover:text-white">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="saveProduct(event)" class="p-6 space-y-4">
+                <input type="hidden" id="prod-id">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Nombre</label>
+                        <input type="text" id="prod-name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none" placeholder="ej. Chilaquiles Verdes">
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Categoría</label>
+                        <select id="prod-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none">
+                            <option value="desayunos">🍳 Desayunos</option>
+                            <option value="comidas">🍔 Comida Formal</option>
+                            <option value="snacks">🍟 Snacks / Chuchulucos</option>
+                            <option value="bebidas">🥤 Sodas y Bebidas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Precio ($ MXN)</label>
+                        <input type="number" step="0.50" id="prod-price" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none" placeholder="55.00">
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Estado</label>
+                        <select id="prod-active" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none">
+                            <option value="true">🟢 Activo / Disponible</option>
+                            <option value="false">🔴 Agotado / Ocultar</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">URL de la Foto</label>
+                    <input type="url" id="prod-image" required onchange="previewProductImage(this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none" placeholder="https://images.unsplash.com/...">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Descripción Breve</label>
+                    <textarea id="prod-desc" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none" placeholder="Ingredientes o detalle del producto..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Opciones (separadas por coma)</label>
+                    <input type="text" id="prod-options" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none" placeholder="Con queso, Sin cebolla, Extra crema">
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeProductModal()" class="flex-1 border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl hover:bg-gray-50 transition">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition shadow-md">Guardar en DB</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT & REALTIME DATABASE INTEGRATION -->
+    <script>
+        // FIREBASE CONFIGURATION (TUS CREDENCIALES EXACTAS)
+        const firebaseConfig = {
+            apiKey: "AIzaSyACM0PEd7JSIldLROsRFME8tPN8qzwv7wg",
+            authDomain: "cafeteriadb-5f91a.firebaseapp.com",
+            databaseURL: "https://cafeteriadb-5f91a-default-rtdb.firebaseio.com",
+            projectId: "cafeteriadb-5f91a",
+            storageBucket: "cafeteriadb-5f91a.firebasestorage.app",
+            messagingSenderId: "405455239272",
+            appId: "1:405455239272:web:4d0351869ecee5bd7a63dd",
+            measurementId: "G-JSWZXYWJ0W"
+        };
+
+        // DEFAULT MENU (SI LA DB ESTÁ VACÍA)
+        const DEFAULT_MENU = {
+            'p1': { id: 'p1', name: 'Chilaquiles con Pollo', category: 'desayunos', price: 55.00, active: true, image: 'https://images.unsplash.com/photo-1599789197514-47270cd526b4?auto=format&fit=crop&w=600&q=80', description: 'Totopos bañados en salsa verde o roja con pollo deshebrado, crema y queso.', options: ['Salsa Verde', 'Salsa Roja', 'Con Crema', 'Con Cebolla'] },
+            'p2': { id: 'p2', name: 'Torta de Pierna Especial', category: 'comidas', price: 65.00, active: true, image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80', description: 'Telera caliente con pierna horneada, aguacate, jitomate, queso y mayonesa.', options: ['Sin Chile', 'Con Chiles Encurtidos', 'Con Queso Oaxaca'] },
+            'p3': { id: 'p3', name: 'Papitas / Sabritas surtidas', category: 'snacks', price: 22.00, active: true, image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&w=600&q=80', description: 'Bolsa de frituras variadas (Doritos, Cheetos, Ruffles).', options: ['Con Salsa Valentina', 'Con Limón'] },
+            'p4': { id: 'p4', name: 'Refresco Coca-Cola 600ml', category: 'bebidas', price: 25.00, active: true, image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80', description: 'Botella de refresco bien fría.', options: ['Normal', 'Zero Azúcar', 'Light'] }
+        };
+
+        // DEMO USERS
+        const USERS = [
+            { id: 'alumno123', name: 'Carlos Mendoza', role: 'student', pass: '123456' },
+            { id: 'admin', name: 'Chef María (Cocina)', role: 'admin', pass: 'admin123' }
+        ];
+
+        // STATE VARIABLES
+        let rtdb = null;
+        let currentUser = null;
+        let menuItems = [];
+        let orders = [];
+        let cart = [];
+        let activeCategoryFilter = 'all';
+        let currentModalItem = null;
+        let modalQuantity = 1;
+
+        // INIT APPLICATION
+        window.addEventListener('DOMContentLoaded', () => {
+            initFirebaseRTDB();
+            checkUserSession();
+            lucide.createIcons();
+        });
+
+        function initFirebaseRTDB() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                rtdb = firebase.database();
+                updateDbStatusUI(true, "Realtime DB Conectado");
+                listenToRealtimeDB();
+            } catch (err) {
+                console.error("Error conectando a Realtime DB:", err);
+                updateDbStatusUI(false, "Error de Conexión");
+            }
+        }
+
+        function updateDbStatusUI(connected, text) {
+            const badge = document.getElementById('db-status-text');
+            const dot = document.getElementById('db-indicator-dot');
+            if (badge && dot) {
+                badge.innerText = text;
+                dot.className = connected ? "w-2 h-2 rounded-full bg-emerald-400" : "w-2 h-2 rounded-full bg-amber-400";
+            }
+        }
+
+        // REALTIME LISTENERS (RTDB)
+        function listenToRealtimeDB() {
+            // 1. Escuchar Menú
+            rtdb.ref('cafeteria_menu').on('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) {
+                    // Inicializar con menú por defecto si está vacío
+                    rtdb.ref('cafeteria_menu').set(DEFAULT_MENU);
+                } else {
+                    menuItems = Object.values(data);
+                    renderStudentMenu();
+                    if (currentUser && currentUser.role === 'admin') renderInventoryTable();
+                }
+            });
+
+            // 2. Escuchar Pedidos
+            rtdb.ref('cafeteria_orders').on('value', snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    orders = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+                } else {
+                    orders = [];
+                }
+                if (currentUser) {
+                    if (currentUser.role === 'admin') renderAdminOrders();
+                    else renderStudentOrders();
+                }
+            });
+        }
+
+        // AUTH & SESSION
+        function switchAuthTab(tab) {
+            document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('register-form').classList.toggle('hidden', tab === 'login');
+            document.getElementById('tab-login-btn').className = tab === 'login' ? "flex-1 py-2 font-semibold text-center text-indigo-600 border-b-2 border-indigo-600" : "flex-1 py-2 font-semibold text-center text-gray-500";
+            document.getElementById('tab-register-btn').className = tab === 'register' ? "flex-1 py-2 font-semibold text-center text-indigo-600 border-b-2 border-indigo-600" : "flex-1 py-2 font-semibold text-center text-gray-500";
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const id = document.getElementById('login-id').value.trim();
+            const pass = document.getElementById('login-password').value.trim();
+
+            const foundUser = USERS.find(u => u.id.toLowerCase() === id.toLowerCase() && u.pass === pass);
+            if (foundUser) {
+                currentUser = foundUser;
+                sessionStorage.setItem('campusbites_user', JSON.stringify(currentUser));
+                setupAuthenticatedUI();
+            } else {
+                alert('Usuario o contraseña incorrectos.');
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const id = document.getElementById('reg-id').value.trim();
+            const role = document.getElementById('reg-role').value;
+            const pass = document.getElementById('reg-password').value;
+
+            const newUser = { id, name, role, pass };
+            USERS.push(newUser);
+            currentUser = newUser;
+            sessionStorage.setItem('campusbites_user', JSON.stringify(currentUser));
+            setupAuthenticatedUI();
+        }
+
+        function checkUserSession() {
+            const saved = sessionStorage.getItem('campusbites_user');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                setupAuthenticatedUI();
+            } else {
+                showScreen('auth-screen');
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('campusbites_user');
+            currentUser = null;
+            cart = [];
+            document.getElementById('user-info-bar').classList.add('hidden');
+            showScreen('auth-screen');
+        }
+
+        function setupAuthenticatedUI() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('user-info-bar').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = currentUser.name;
+            document.getElementById('user-display-role').innerText = currentUser.role === 'admin' ? 'Administrador / Cocina' : 'Alumno';
+
+            if (currentUser.role === 'admin') {
+                showScreen('admin-portal');
+                renderAdminOrders();
+                renderInventoryTable();
+            } else {
+                showScreen('student-portal');
+                renderStudentMenu();
+                renderCart();
+                renderStudentOrders();
+                setDefaultPickupTime();
+            }
+        }
+
+        function showScreen(id) {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('student-portal').classList.add('hidden');
+            document.getElementById('admin-portal').classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        // STUDENT NAVIGATION
+        function switchStudentTab(tab) {
+            document.getElementById('student-menu-view').classList.toggle('hidden', tab !== 'menu');
+            document.getElementById('student-orders-view').classList.toggle('hidden', tab === 'menu');
+            document.getElementById('student-tab-menu').className = tab === 'menu' ? "flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition bg-indigo-50 text-indigo-700" : "flex-1 py-2.5 px-4 text-sm font-semibold text-gray-600";
+            document.getElementById('student-tab-orders').className = tab === 'orders' ? "flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition bg-indigo-50 text-indigo-700" : "flex-1 py-2.5 px-4 text-sm font-semibold text-gray-600";
+            if (tab === 'orders') renderStudentOrders();
+        }
+
+        function filterCategory(cat) {
+            activeCategoryFilter = cat;
+            document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+                btn.className = "cat-filter-btn bg-white hover:bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shadow-sm border border-gray-200";
+            });
+            event.target.className = "cat-filter-btn active bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shadow-sm";
+            renderStudentMenu();
+        }
+
+        // STUDENT MENU & CART
+        function renderStudentMenu() {
+            const grid = document.getElementById('menu-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const activeItems = menuItems.filter(item => item.active !== false);
+            const filtered = activeCategoryFilter === 'all' ? activeItems : activeItems.filter(i => i.category === activeCategoryFilter);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-2 py-12 text-center text-gray-400">No hay productos disponibles en esta categoría.</div>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between group";
+                card.innerHTML = `
+                    <div>
+                        <div class="relative h-36 bg-gray-100 overflow-hidden">
+                            <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <span class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white font-bold text-xs px-2.5 py-1 rounded-full">
+                                $${parseFloat(item.price).toFixed(2)}
+                            </span>
+                        </div>
+                        <div class="p-4">
+                            <h4 class="font-bold text-gray-800 text-base">${item.name}</h4>
+                            <p class="text-xs text-gray-500 line-clamp-2 mt-1">${item.description || ''}</p>
+                        </div>
+                    </div>
+                    <div class="p-4 pt-0">
+                        <button onclick="openCustomModal('${item.id}')" class="w-full bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white font-bold text-xs py-2 px-3 rounded-xl transition flex items-center justify-center gap-1">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Personalizar y Pedir
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function openCustomModal(itemId) {
+            const item = menuItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            currentModalItem = item;
+            modalQuantity = 1;
+
+            document.getElementById('modal-item-img').src = item.image;
+            document.getElementById('modal-item-title').innerText = item.name;
+            document.getElementById('modal-item-price').innerText = `$${parseFloat(item.price).toFixed(2)}`;
+            document.getElementById('modal-item-desc').innerText = item.description || '';
+            document.getElementById('modal-item-category').innerText = (item.category || '').toUpperCase();
+            document.getElementById('modal-qty').innerText = '1';
+            document.getElementById('modal-item-note').value = '';
+
+            const optsList = document.getElementById('modal-options-list');
+            optsList.innerHTML = '';
+
+            if (item.options && item.options.length > 0) {
+                document.getElementById('modal-options-container').classList.remove('hidden');
+                item.options.forEach(opt => {
+                    const row = document.createElement('label');
+                    row.className = "flex items-center gap-2 text-xs text-gray-700 p-1 hover:bg-gray-50 rounded cursor-pointer";
+                    row.innerHTML = `<input type="checkbox" value="${opt}" class="modal-opt-checkbox rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"> <span>${opt}</span>`;
+                    optsList.appendChild(row);
+                });
+            } else {
+                document.getElementById('modal-options-container').classList.add('hidden');
+            }
+
+            document.getElementById('custom-item-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeCustomModal() {
+            document.getElementById('custom-item-modal').classList.add('hidden');
+            currentModalItem = null;
+        }
+
+        function adjustModalQty(delta) {
+            modalQuantity = Math.max(1, modalQuantity + delta);
+            document.getElementById('modal-qty').innerText = modalQuantity;
+        }
+
+        function confirmAddToCart() {
+            if (!currentModalItem) return;
+
+            const selectedOptions = [];
+            document.querySelectorAll('.modal-opt-checkbox:checked').forEach(cb => selectedOptions.push(cb.value));
+            const note = document.getElementById('modal-item-note').value.trim();
+
+            cart.push({
+                cartId: 'cart_' + Date.now(),
+                itemId: currentModalItem.id,
+                name: currentModalItem.name,
+                price: parseFloat(currentModalItem.price),
+                quantity: modalQuantity,
+                selectedOptions,
+                note
+            });
+
+            closeCustomModal();
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-gray-400 text-xs">Tu carrito está vacío.</div>`;
+                document.getElementById('cart-total-price').innerText = '$0.00';
+                return;
+            }
+
+            let total = 0;
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+
+                const div = document.createElement('div');
+                div.className = "bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs space-y-1";
+                div.innerHTML = `
+                    <div class="flex justify-between font-bold text-gray-800">
+                        <span>${item.quantity}x ${item.name}</span>
+                        <span class="text-indigo-600">$${itemTotal.toFixed(2)}</span>
+                    </div>
+                    ${item.selectedOptions.length ? `<div class="text-gray-500 italic">Opción: ${item.selectedOptions.join(', ')}</div>` : ''}
+                    ${item.note ? `<div class="text-amber-600 font-medium">Nota: ${item.note}</div>` : ''}
+                    <div class="flex justify-end pt-1">
+                        <button onclick="removeFromCart('${item.cartId}')" class="text-red-500 hover:text-red-700 text-[11px] font-semibold flex items-center gap-0.5">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i> Quitar
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('cart-total-price').innerText = `$${total.toFixed(2)}`;
+            lucide.createIcons();
+        }
+
+        function removeFromCart(cartId) {
+            cart = cart.filter(i => i.cartId !== cartId);
+            renderCart();
+        }
+
+        function clearCart() {
+            cart = [];
+            renderCart();
+        }
+
+        function setDefaultPickupTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 25);
+            const hours = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('pickup-time').value = `${hours}:${mins}`;
+        }
+
+        // SUBMIT ORDER TO RTDB
+        function submitOrder() {
+            if (cart.length === 0) { alert('Agrega productos al pedido.'); return; }
+            const pickupTime = document.getElementById('pickup-time').value;
+            if (!pickupTime) { alert('Selecciona la hora de entrega.'); return; }
+
+            const notes = document.getElementById('order-notes').value.trim();
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+
+            const newOrder = {
+                id: orderId,
+                studentId: currentUser.id,
+                studentName: currentUser.name,
+                items: cart,
+                total: total,
+                pickupTime: pickupTime,
+                notes: notes,
+                status: 'pending',
+                createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                timestamp: Date.now()
+            };
+
+            rtdb.ref('cafeteria_orders/' + orderId).set(newOrder).then(() => {
+                alert(`¡Pedido #${orderId} enviado a la cafetería con éxito!`);
+                cart = [];
+                renderCart();
+                switchStudentTab('orders');
+            }).catch(err => alert("Error enviando pedido: " + err.message));
+        }
+
+        function renderStudentOrders() {
+            const container = document.getElementById('student-orders-list');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const myOrders = orders.filter(o => o.studentId === currentUser.id);
+
+            const countBadge = document.getElementById('my-orders-count');
+            if (myOrders.length > 0) {
+                countBadge.innerText = myOrders.length;
+                countBadge.classList.remove('hidden');
+            } else {
+                countBadge.classList.add('hidden');
+            }
+
+            if (myOrders.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-400">No has realizado ningún pedido aún.</div>`;
+                return;
+            }
+
+            myOrders.forEach(ord => {
+                const card = document.createElement('div');
+                card.className = "border border-gray-200 rounded-xl p-4 bg-gray-50 space-y-3";
+
+                let statusBadge = '';
+                if (ord.status === 'pending') statusBadge = '<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-bold">🟡 Recibido</span>';
+                else if (ord.status === 'preparing') statusBadge = '<span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-bold">🔵 En Preparación</span>';
+                else if (ord.status === 'ready') statusBadge = '<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold">🟢 Listo para Recoger</span>';
+                else if (ord.status === 'delivered') statusBadge = '<span class="bg-gray-200 text-gray-700 text-xs px-2.5 py-1 rounded-full font-bold">⚪ Entregado</span>';
+
+                const itemsSummary = ord.items.map(i => `${i.quantity}x ${i.name} ${i.selectedOptions && i.selectedOptions.length ? `(${i.selectedOptions.join(', ')})` : ''}`).join('<br>');
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start border-b border-gray-200 pb-2">
+                        <div>
+                            <span class="font-bold text-gray-800 text-base">Pedido #${ord.id}</span>
+                            <p class="text-xs text-gray-500">Hora solicitada: <b class="text-indigo-600">${ord.pickupTime} hrs</b></p>
+                        </div>
+                        <div>${statusBadge}</div>
+                    </div>
+                    <div class="text-xs text-gray-700 bg-white p-3 rounded-lg border border-gray-100">${itemsSummary}</div>
+                    <div class="flex justify-between items-center text-xs text-gray-500 pt-1">
+                        <span>Enviado a las: ${ord.createdAt}</span>
+                        <span class="font-bold text-sm text-gray-900">Total: $${parseFloat(ord.total).toFixed(2)}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ADMIN FUNCTIONS
+        function switchAdminTab(tab) {
+            document.getElementById('admin-orders-tab-content').classList.toggle('hidden', tab !== 'orders');
+            document.getElementById('admin-inventory-tab-content').classList.toggle('hidden', tab === 'orders');
+            document.getElementById('admin-tab-orders-btn').className = tab === 'orders' ? "flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition bg-indigo-50 text-indigo-700" : "flex-1 py-2.5 px-4 text-sm font-semibold text-gray-600";
+            document.getElementById('admin-tab-inventory-btn').className = tab === 'inventory' ? "flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition bg-indigo-50 text-indigo-700" : "flex-1 py-2.5 px-4 text-sm font-semibold text-gray-600";
+            if (tab === 'inventory') renderInventoryTable();
+            else renderAdminOrders();
+        }
+
+        function renderAdminOrders() {
+            const colPending = document.getElementById('col-pending');
+            const colPreparing = document.getElementById('col-preparing');
+            const colReady = document.getElementById('col-ready');
+            if (!colPending) return;
+
+            colPending.innerHTML = ''; colPreparing.innerHTML = ''; colReady.innerHTML = '';
+            let cPending = 0, cPrep = 0, cReady = 0;
+
+            orders.forEach(ord => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-3";
+
+                const itemsList = ord.items.map(i => `
+                    <div class="text-xs">
+                        <span class="font-bold text-gray-800">${i.quantity}x ${i.name}</span>
+                        ${i.selectedOptions && i.selectedOptions.length ? `<span class="text-indigo-600 font-medium"> [${i.selectedOptions.join(', ')}]</span>` : ''}
+                        ${i.note ? `<div class="text-amber-600 italic text-[11px]">Nota: "${i.note}"</div>` : ''}
+                    </div>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start border-b border-gray-100 pb-2">
+                        <div>
+                            <span class="font-bold text-sm text-gray-900">#${ord.id} - ${ord.studentName}</span>
+                            <div class="text-xs text-indigo-600 font-bold flex items-center gap-1 mt-0.5">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i> Para las: ${ord.pickupTime} hrs
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">$${parseFloat(ord.total).toFixed(2)}</span>
+                    </div>
+                    <div class="space-y-1 bg-gray-50 p-2.5 rounded-lg border border-gray-100">${itemsList}</div>
+                    <div class="pt-1">
+                        <select onchange="updateOrderStatus('${ord.id}', this.value)" class="text-xs font-semibold px-2 py-1.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full">
+                            <option value="pending" ${ord.status === 'pending' ? 'selected' : ''}>🟡 Pendiente</option>
+                            <option value="preparing" ${ord.status === 'preparing' ? 'selected' : ''}>🔵 En Preparación</option>
+                            <option value="ready" ${ord.status === 'ready' ? 'selected' : ''}>🟢 Listo p/ Entrega</option>
+                            <option value="delivered" ${ord.status === 'delivered' ? 'selected' : ''}>⚪ Entregado</option>
+                        </select>
+                    </div>
+                `;
+
+                if (ord.status === 'pending') { colPending.appendChild(card); cPending++; }
+                else if (ord.status === 'preparing') { colPreparing.appendChild(card); cPrep++; }
+                else { colReady.appendChild(card); cReady++; }
+            });
+
+            document.getElementById('count-pending').innerText = cPending;
+            document.getElementById('count-preparing').innerText = cPrep;
+            document.getElementById('count-ready').innerText = cReady;
+            lucide.createIcons();
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            rtdb.ref(`cafeteria_orders/${orderId}`).update({ status: newStatus });
+        }
+
+        function renderInventoryTable() {
+            const tbody = document.getElementById('inventory-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            menuItems.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition";
+                tr.innerHTML = `
+                    <td class="p-4"><img src="${item.image}" class="w-12 h-12 rounded-lg object-cover border border-gray-200"></td>
+                    <td class="p-4"><div class="font-bold text-gray-800">${item.name}</div><div class="text-xs text-gray-400">${item.description || ''}</div></td>
+                    <td class="p-4 text-xs font-semibold text-gray-600 capitalize">${item.category}</td>
+                    <td class="p-4 font-bold text-indigo-600">$${parseFloat(item.price).toFixed(2)}</td>
+                    <td class="p-4 text-xs text-gray-500">${item.options && item.options.length ? item.options.join(', ') : '-'}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="toggleProductActive('${item.id}')" class="px-2.5 py-1 rounded-full text-xs font-bold ${item.active !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                            ${item.active !== false ? '🟢 Activo' : '🔴 Agotado'}
+                        </button>
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="openProductModal('${item.id}')" class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="deleteProduct('${item.id}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function openProductModal(productId = null) {
+            if (productId) {
+                const item = menuItems.find(i => i.id === productId);
+                if (!item) return;
+                document.getElementById('admin-modal-title').innerText = "Editar Producto y Precio";
+                document.getElementById('prod-id').value = item.id;
+                document.getElementById('prod-name').value = item.name;
+                document.getElementById('prod-category').value = item.category;
+                document.getElementById('prod-price').value = item.price;
+                document.getElementById('prod-active').value = item.active !== false ? "true" : "false";
+                document.getElementById('prod-image').value = item.image;
+                document.getElementById('prod-desc').value = item.description || '';
+                document.getElementById('prod-options').value = item.options ? item.options.join(', ') : '';
+            } else {
+                document.getElementById('admin-modal-title').innerText = "Nuevo Producto para Menú";
+                document.getElementById('prod-id').value = '';
+                document.getElementById('prod-name').value = '';
+                document.getElementById('prod-category').value = 'desayunos';
+                document.getElementById('prod-price').value = '';
+                document.getElementById('prod-active').value = "true";
+                document.getElementById('prod-image').value = '';
+                document.getElementById('prod-desc').value = '';
+                document.getElementById('prod-options').value = '';
+            }
+            document.getElementById('admin-product-modal').classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            document.getElementById('admin-product-modal').classList.add('hidden');
+        }
+
+        function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('prod-id').value || ('p_' + Date.now());
+            const name = document.getElementById('prod-name').value.trim();
+            const category = document.getElementById('prod-category').value;
+            const price = parseFloat(document.getElementById('prod-price').value);
+            const active = document.getElementById('prod-active').value === "true";
+            const image = document.getElementById('prod-image').value.trim();
+            const description = document.getElementById('prod-desc').value.trim();
+            const rawOpts = document.getElementById('prod-options').value.trim();
+            const options = rawOpts ? rawOpts.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+            const productData = { id, name, category, price, active, image, description, options };
+
+            rtdb.ref(`cafeteria_menu/${id}`).set(productData).then(() => {
+                closeProductModal();
+                alert('¡Producto guardado en Realtime Database!');
+            }).catch(err => alert("Error al guardar: " + err.message));
+        }
+
+        function toggleProductActive(id) {
+            const item = menuItems.find(i => i.id === id);
+            if (!item) return;
+            const newActive = item.active === false ? true : false;
+            rtdb.ref(`cafeteria_menu/${id}`).update({ active: newActive });
+        }
+
+        function deleteProduct(id) {
+            if (confirm('¿Estás seguro de eliminar este producto?')) {
+                rtdb.ref(`cafeteria_menu/${id}`).remove();
+            }
+        }
+    </script>
+</body>
+</html>
