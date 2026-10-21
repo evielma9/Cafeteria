@@ -195,10 +195,19 @@
 
             <!-- ADMIN TAB 1: KANBAN -->
             <div id="admin-orders-tab-content">
+                <!-- Header with Action Buttons: Export & Clear Orders -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center justify-between mb-6">
                     <div>
                         <h2 class="text-xl font-bold text-gray-800">Control de Pedidos en Cocina</h2>
                         <p class="text-xs text-gray-500">Sincronización en tiempo real con Firebase Realtime Database</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="exportOrdersToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Exportar a Excel
+                        </button>
+                        <button onclick="confirmClearAllOrders()" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 border border-red-200 transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Borrar Historial de Pedidos
+                        </button>
                     </div>
                 </div>
 
@@ -387,7 +396,7 @@
 
     <!-- JAVASCRIPT & REALTIME DATABASE INTEGRATION -->
     <script>
-        // FIREBASE CONFIGURATION (TUS CREDENCIALES EXACTAS)
+        // FIREBASE CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyACM0PEd7JSIldLROsRFME8tPN8qzwv7wg",
             authDomain: "cafeteriadb-5f91a.firebaseapp.com",
@@ -399,7 +408,6 @@
             measurementId: "G-JSWZXYWJ0W"
         };
 
-        // DEFAULT MENU (SI LA DB ESTÁ VACÍA)
         const DEFAULT_MENU = {
             'p1': { id: 'p1', name: 'Chilaquiles con Pollo', category: 'desayunos', price: 55.00, active: true, image: 'https://images.unsplash.com/photo-1599789197514-47270cd526b4?auto=format&fit=crop&w=600&q=80', description: 'Totopos bañados en salsa verde o roja con pollo deshebrado, crema y queso.', options: ['Salsa Verde', 'Salsa Roja', 'Con Crema', 'Con Cebolla'] },
             'p2': { id: 'p2', name: 'Torta de Pierna Especial', category: 'comidas', price: 65.00, active: true, image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80', description: 'Telera caliente con pierna horneada, aguacate, jitomate, queso y mayonesa.', options: ['Sin Chile', 'Con Chiles Encurtidos', 'Con Queso Oaxaca'] },
@@ -407,13 +415,11 @@
             'p4': { id: 'p4', name: 'Refresco Coca-Cola 600ml', category: 'bebidas', price: 25.00, active: true, image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80', description: 'Botella de refresco bien fría.', options: ['Normal', 'Zero Azúcar', 'Light'] }
         };
 
-        // DEMO USERS
         const USERS = [
             { id: 'alumno123', name: 'Carlos Mendoza', role: 'student', pass: '123456' },
             { id: 'admin', name: 'Chef María (Cocina)', role: 'admin', pass: 'admin123' }
         ];
 
-        // STATE VARIABLES
         let rtdb = null;
         let currentUser = null;
         let menuItems = [];
@@ -423,7 +429,6 @@
         let currentModalItem = null;
         let modalQuantity = 1;
 
-        // INIT APPLICATION
         window.addEventListener('DOMContentLoaded', () => {
             initFirebaseRTDB();
             checkUserSession();
@@ -451,13 +456,10 @@
             }
         }
 
-        // REALTIME LISTENERS (RTDB)
         function listenToRealtimeDB() {
-            // 1. Escuchar Menú
             rtdb.ref('cafeteria_menu').on('value', snapshot => {
                 const data = snapshot.val();
                 if (!data) {
-                    // Inicializar con menú por defecto si está vacío
                     rtdb.ref('cafeteria_menu').set(DEFAULT_MENU);
                 } else {
                     menuItems = Object.values(data);
@@ -466,7 +468,6 @@
                 }
             });
 
-            // 2. Escuchar Pedidos
             rtdb.ref('cafeteria_orders').on('value', snapshot => {
                 const data = snapshot.val();
                 if (data) {
@@ -481,7 +482,6 @@
             });
         }
 
-        // AUTH & SESSION
         function switchAuthTab(tab) {
             document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
             document.getElementById('register-form').classList.toggle('hidden', tab === 'login');
@@ -562,7 +562,6 @@
             document.getElementById(id).classList.remove('hidden');
         }
 
-        // STUDENT NAVIGATION
         function switchStudentTab(tab) {
             document.getElementById('student-menu-view').classList.toggle('hidden', tab !== 'menu');
             document.getElementById('student-orders-view').classList.toggle('hidden', tab === 'menu');
@@ -580,7 +579,6 @@
             renderStudentMenu();
         }
 
-        // STUDENT MENU & CART
         function renderStudentMenu() {
             const grid = document.getElementById('menu-grid');
             if (!grid) return;
@@ -742,7 +740,6 @@
             document.getElementById('pickup-time').value = `${hours}:${mins}`;
         }
 
-        // SUBMIT ORDER TO RTDB
         function submitOrder() {
             if (cart.length === 0) { alert('Agrega productos al pedido.'); return; }
             const pickupTime = document.getElementById('pickup-time').value;
@@ -821,6 +818,54 @@
                 `;
                 container.appendChild(card);
             });
+        }
+
+        // EXPORT ORDERS TO EXCEL (CSV)
+        function exportOrdersToExcel() {
+            if (orders.length === 0) {
+                alert("No hay pedidos registrados para exportar.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,ID Pedido,Alumno,Hora de Entrega,Total (MXN),Estatus,Notas del Pedido\n";
+            
+            orders.forEach(ord => {
+                let row = [
+                    ord.id,
+                    `"${ord.studentName}"`,
+                    ord.pickupTime,
+                    ord.total,
+                    ord.status,
+                    `"${(ord.notes || '').replace(/"/g, '""')}"`
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "pedidos_cafeteria_" + new Date().toISOString().slice(0,10) + ".csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // CONFIRM & CLEAR ONLY ORDERS (LEAVES MENU INTACT)
+        function confirmClearAllOrders() {
+            if (orders.length === 0) {
+                alert("No hay pedidos para borrar.");
+                return;
+            }
+
+            const confirmation = confirm("¿Estás seguro de borrar toda la información de los pedidos? Esta acción no se puede deshacer (el catálogo de precios y productos no se afectará).");
+            
+            if (confirmation) {
+                rtdb.ref('cafeteria_orders').remove().then(() => {
+                    alert("¡El historial de pedidos ha sido borrado con éxito!");
+                }).catch(err => {
+                    alert("Error al borrar los pedidos: " + err.message);
+                });
+            }
         }
 
         // ADMIN FUNCTIONS
