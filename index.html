@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusBites - Cafetería Escolar (Realtime DB)</title>
+    <title>CampusBites - Cafetería Escolar (Realtime DB & Users)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -81,7 +81,7 @@
                         <input type="text" id="reg-name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Juan Pérez">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Matrícula o Usuario</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Matrícula o Usuario (Único)</label>
                         <input type="text" id="reg-id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="A01234567">
                     </div>
                     <div>
@@ -95,7 +95,7 @@
                         <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Contraseña</label>
                         <input type="password" id="reg-password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="••••••••">
                     </div>
-                    <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition shadow-md">Crear Cuenta</button>
+                    <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-semibold hover:bg-emerald-700 transition shadow-md">Crear Cuenta en DB</button>
                 </form>
 
                 <div class="mt-6 pt-4 border-t border-gray-100 text-xs text-gray-500">
@@ -195,7 +195,6 @@
 
             <!-- ADMIN TAB 1: KANBAN -->
             <div id="admin-orders-tab-content">
-                <!-- Header with Action Buttons: Export & Clear Orders -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center justify-between mb-6">
                     <div>
                         <h2 class="text-xl font-bold text-gray-800">Control de Pedidos en Cocina</h2>
@@ -415,15 +414,16 @@
             'p4': { id: 'p4', name: 'Refresco Coca-Cola 600ml', category: 'bebidas', price: 25.00, active: true, image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80', description: 'Botella de refresco bien fría.', options: ['Normal', 'Zero Azúcar', 'Light'] }
         };
 
-        const USERS = [
-            { id: 'alumno123', name: 'Carlos Mendoza', role: 'student', pass: '123456' },
-            { id: 'admin', name: 'Chef María (Cocina)', role: 'admin', pass: 'admin123' }
-        ];
+        const DEFAULT_USERS = {
+            'alumno123': { id: 'alumno123', name: 'Carlos Mendoza', role: 'student', pass: '123456' },
+            'admin': { id: 'admin', name: 'Chef María (Cocina)', role: 'admin', pass: 'admin123' }
+        };
 
         let rtdb = null;
         let currentUser = null;
         let menuItems = [];
         let orders = [];
+        let usersList = {};
         let cart = [];
         let activeCategoryFilter = 'all';
         let currentModalItem = null;
@@ -457,6 +457,7 @@
         }
 
         function listenToRealtimeDB() {
+            // 1. Escuchar Menú
             rtdb.ref('cafeteria_menu').on('value', snapshot => {
                 const data = snapshot.val();
                 if (!data) {
@@ -468,6 +469,7 @@
                 }
             });
 
+            // 2. Escuchar Pedidos
             rtdb.ref('cafeteria_orders').on('value', snapshot => {
                 const data = snapshot.val();
                 if (data) {
@@ -478,6 +480,16 @@
                 if (currentUser) {
                     if (currentUser.role === 'admin') renderAdminOrders();
                     else renderStudentOrders();
+                }
+            });
+
+            // 3. Escuchar Usuarios en DB
+            rtdb.ref('cafeteria_users').on('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) {
+                    rtdb.ref('cafeteria_users').set(DEFAULT_USERS);
+                } else {
+                    usersList = data;
                 }
             });
         }
@@ -491,31 +503,41 @@
 
         function handleLogin(e) {
             e.preventDefault();
-            const id = document.getElementById('login-id').value.trim();
+            const id = document.getElementById('login-id').value.trim().toLowerCase();
             const pass = document.getElementById('login-password').value.trim();
 
-            const foundUser = USERS.find(u => u.id.toLowerCase() === id.toLowerCase() && u.pass === pass);
-            if (foundUser) {
+            const foundUser = usersList[id];
+            if (foundUser && foundUser.pass === pass) {
                 currentUser = foundUser;
                 sessionStorage.setItem('campusbites_user', JSON.stringify(currentUser));
                 setupAuthenticatedUI();
             } else {
-                alert('Usuario o contraseña incorrectos.');
+                alert('Matrícula o contraseña incorrectos.');
             }
         }
 
         function handleRegister(e) {
             e.preventDefault();
             const name = document.getElementById('reg-name').value.trim();
-            const id = document.getElementById('reg-id').value.trim();
+            const id = document.getElementById('reg-id').value.trim().toLowerCase();
             const role = document.getElementById('reg-role').value;
             const pass = document.getElementById('reg-password').value;
 
+            if (usersList[id]) {
+                alert('Esta matrícula o usuario ya está registrado en la base de datos.');
+                return;
+            }
+
             const newUser = { id, name, role, pass };
-            USERS.push(newUser);
-            currentUser = newUser;
-            sessionStorage.setItem('campusbites_user', JSON.stringify(currentUser));
-            setupAuthenticatedUI();
+
+            rtdb.ref(`cafeteria_users/${id}`).set(newUser).then(() => {
+                currentUser = newUser;
+                sessionStorage.setItem('campusbites_user', JSON.stringify(currentUser));
+                alert('¡Cuenta creada y guardada en Firebase con éxito!');
+                setupAuthenticatedUI();
+            }).catch(err => {
+                alert('Error al registrar usuario: ' + err.message);
+            });
         }
 
         function checkUserSession() {
