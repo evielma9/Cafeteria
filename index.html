@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusBites - Cafetería Escolar (Realtime DB & Users)</title>
+    <title>CampusBites - Sistema de Comandas por Mesa</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -26,7 +26,7 @@
                 <i data-lucide="utensils-crossed" class="w-6 h-6 text-yellow-300 shrink-0"></i>
                 <h1 class="text-base sm:text-xl font-bold tracking-wide truncate">
                     CampusBites 
-                    <span class="hidden sm:inline-block text-xs font-normal bg-indigo-800 px-2 py-0.5 rounded-full text-indigo-200 ml-1">Cafetería Escolar</span>
+                    <span class="hidden sm:inline-block text-xs font-normal bg-indigo-800 px-2 py-0.5 rounded-full text-indigo-200 ml-1">Control de Mesas</span>
                 </h1>
             </div>
 
@@ -38,7 +38,7 @@
 
                 <div id="user-info-bar" class="hidden flex items-center gap-2 border-l border-indigo-600 pl-2 sm:pl-3">
                     <div class="text-right text-[11px] sm:text-xs">
-                        <p id="user-display-name" class="font-semibold leading-tight max-w-[90px] sm:max-w-none truncate"></p>
+                        <p id="user-display-name" class="font-semibold leading-tight max-w-[120px] sm:max-w-none truncate"></p>
                         <p id="user-display-role" class="text-indigo-300 capitalize text-[10px] sm:text-xs leading-tight"></p>
                     </div>
                     <button onclick="logout()" class="p-1 sm:p-1.5 hover:bg-indigo-600 rounded-lg text-indigo-200 hover:text-white transition" title="Cerrar Sesión">
@@ -59,7 +59,7 @@
                     <i data-lucide="coffee" class="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300"></i>
                 </div>
                 <h2 class="text-xl sm:text-2xl font-bold">Bienvenido a CampusBites</h2>
-                <p class="text-indigo-200 text-xs sm:text-sm mt-1">Pide tu comida con anticipación y evita filas</p>
+                <p class="text-indigo-200 text-xs sm:text-sm mt-1">Sistema de Toma de Comandas por Mesa</p>
             </div>
 
             <div class="p-4 sm:p-6">
@@ -71,8 +71,8 @@
                 <!-- LOGIN FORM -->
                 <form id="login-form" onsubmit="handleLogin(event)" class="space-y-3 sm:space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Matrícula / ID</label>
-                        <input type="text" id="login-id" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="ej. alumno123 o admin">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Usuario / ID</label>
+                        <input type="text" id="login-id" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="ej. mesero1 o admin">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Contraseña</label>
@@ -85,17 +85,17 @@
                 <form id="register-form" onsubmit="handleRegister(event)" class="space-y-3 sm:space-y-4 hidden">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Nombre Completo</label>
-                        <input type="text" id="reg-name" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Juan Pérez">
+                        <input type="text" id="reg-name" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Carlos Mendoza">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Matrícula o Usuario (Único)</label>
-                        <input type="text" id="reg-id" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="A01234567">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Usuario o ID (Único)</label>
+                        <input type="text" id="reg-id" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="mesero1">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Tipo de Usuario</label>
                         <select id="reg-role" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-                            <option value="student">Alumno</option>
-                            <option value="admin">Personal de Cafetería / Admin</option>
+                            <option value="waiter">Mesero</option>
+                            <option value="admin">Personal de Cocina / Admin</option>
                         </select>
                     </div>
                     <div>
@@ -108,29 +108,28 @@
                 <div class="mt-5 pt-4 border-t border-gray-100 text-xs text-gray-500">
                     <p class="font-semibold text-gray-700 mb-1">Cuentas demo listas:</p>
                     <ul class="space-y-1">
-                        <li>🎓 <b>Alumno:</b> <code class="bg-gray-100 px-1 py-0.5 rounded">alumno123</code> | Pass: <code class="bg-gray-100 px-1 py-0.5 rounded">123456</code></li>
-                        <li>👨‍🍳 <b>Cafetería:</b> <code class="bg-gray-100 px-1 py-0.5 rounded">admin</code> | Pass: <code class="bg-gray-100 px-1 py-0.5 rounded">admin123</code></li>
+                        <li>🍽️ <b>Mesero:</b> <code class="bg-gray-100 px-1 py-0.5 rounded">mesero1</code> | Pass: <code class="bg-gray-100 px-1 py-0.5 rounded">123456</code></li>
+                        <li>👨‍🍳 <b>Cocina:</b> <code class="bg-gray-100 px-1 py-0.5 rounded">admin</code> | Pass: <code class="bg-gray-100 px-1 py-0.5 rounded">admin123</code></li>
                     </ul>
                 </div>
             </div>
         </section>
 
-        <!-- STUDENT PORTAL -->
+        <!-- WAITER PORTAL -->
         <div id="student-portal" class="hidden space-y-4 sm:space-y-6">
             <div class="flex border-b border-gray-200 bg-white rounded-xl shadow-sm p-1">
                 <button id="student-tab-menu" onclick="switchStudentTab('menu')" class="flex-1 py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition bg-indigo-50 text-indigo-700">
-                    <i data-lucide="utensils" class="w-4 h-4"></i> Hacer Pedido
+                    <i data-lucide="utensils" class="w-4 h-4"></i> Tomar Pedido
                 </button>
                 <button id="student-tab-orders" onclick="switchStudentTab('orders')" class="flex-1 py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-indigo-600 flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="clock" class="w-4 h-4"></i> Mis Pedidos
+                    <i data-lucide="clock" class="w-4 h-4"></i> Pedidos en Curso
                     <span id="my-orders-count" class="bg-indigo-600 text-white text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full hidden">0</span>
                 </button>
             </div>
 
-            <!-- STUDENT MENU VIEW -->
+            <!-- WAITER MENU VIEW -->
             <div id="student-menu-view" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div class="lg:col-span-2 space-y-3 sm:space-y-4">
-                    <!-- Categorías más compactas -->
                     <div class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
                         <button onclick="filterCategory('all')" class="cat-filter-btn active bg-indigo-600 text-white px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shadow-sm">Todos</button>
                         <button onclick="filterCategory('desayunos')" class="cat-filter-btn bg-white hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shadow-sm border border-gray-200">🍳 Desayunos</button>
@@ -139,7 +138,6 @@
                         <button onclick="filterCategory('bebidas')" class="cat-filter-btn bg-white hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shadow-sm border border-gray-200">🥤 Bebidas</button>
                     </div>
 
-                    <!-- Grid de menú más compacto para mostrar más opciones -->
                     <div id="menu-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3"></div>
                 </div>
 
@@ -147,44 +145,63 @@
                     <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-4 sm:p-5 lg:sticky lg:top-16">
                         <div class="flex items-center justify-between pb-3 border-b border-gray-100">
                             <h3 class="font-bold text-base sm:text-lg flex items-center gap-2 text-gray-800">
-                                <i data-lucide="shopping-bag" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600"></i> Tu Pedido
+                                <i data-lucide="shopping-bag" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600"></i> Pedido Actual
                             </h3>
                             <button onclick="clearCart()" class="text-xs text-red-500 hover:text-red-700 font-medium">Vaciar</button>
                         </div>
 
-                        <div id="cart-items" class="py-3 space-y-2 max-h-52 sm:max-h-60 overflow-y-auto"></div>
+                        <!-- INDICADOR DE EDICIÓN ACTIVA -->
+                        <div id="editing-banner" class="hidden bg-amber-100 border border-amber-300 text-amber-900 px-3 py-1.5 rounded-lg text-xs font-bold flex justify-between items-center my-2">
+                            <span>✏️ Editando Pedido <span id="editing-order-id-label"></span></span>
+                            <button onclick="cancelEditing()" class="text-amber-700 hover:text-red-600 text-[11px] underline">Cancelar</button>
+                        </div>
 
-                        <div id="cart-summary" class="border-t border-gray-100 pt-3 space-y-3">
+                        <!-- SELECCIÓN DE MESA -->
+                        <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200 my-3">
+                            <label class="block text-[11px] font-bold text-amber-900 mb-1 flex items-center gap-1">
+                                <i data-lucide="square-asterisk" class="w-3.5 h-3.5 text-amber-700"></i> Seleccionar Mesa *
+                            </label>
+                            <select id="order-table" class="w-full px-2.5 py-2 bg-white border border-amber-300 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                <option value="Mesa 1">Mesa 1</option>
+                                <option value="Mesa 2">Mesa 2</option>
+                                <option value="Mesa 3">Mesa 3</option>
+                                <option value="Mesa 4">Mesa 4</option>
+                                <option value="Mesa 5">Mesa 5</option>
+                                <option value="Mesa 6">Mesa 6</option>
+                                <option value="Mesa 7">Mesa 7</option>
+                                <option value="Mesa 8">Mesa 8</option>
+                                <option value="Barra">Barra</option>
+                                <option value="Para Llevar">Para Llevar</option>
+                            </select>
+                        </div>
+
+                        <!-- ÁREA DE PEDIDO ACTUAL AMPLIADA -->
+                        <div id="cart-items" class="py-2 space-y-2 max-h-72 sm:max-h-96 overflow-y-auto pr-1 border border-gray-100 rounded-lg p-2 bg-gray-50/50"></div>
+
+                        <div id="cart-summary" class="border-t border-gray-100 pt-3 space-y-3 mt-2">
                             <div class="flex justify-between items-center text-base sm:text-lg font-bold text-gray-900">
                                 <span>Total:</span>
                                 <span id="cart-total-price" class="text-indigo-600">$0.00</span>
                             </div>
 
-                            <div class="bg-indigo-50 p-2.5 rounded-xl border border-indigo-100">
-                                <label class="block text-[11px] sm:text-xs font-semibold text-indigo-900 mb-1 flex items-center gap-1">
-                                    <i data-lucide="alarm-clock" class="w-3.5 h-3.5 text-indigo-600"></i> Hora de Entrega Solicitada
-                                </label>
-                                <input type="time" id="pickup-time" required class="w-full px-2.5 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            </div>
-
                             <div>
-                                <label class="block text-[11px] sm:text-xs font-medium text-gray-600 mb-1">Notas para la cocina</label>
-                                <input type="text" id="order-notes" placeholder="ej. Sin mayonesa, cubiertos..." class="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                <label class="block text-[11px] sm:text-xs font-medium text-gray-600 mb-1">Notas generales para cocina</label>
+                                <input type="text" id="order-notes" placeholder="ej. Sin cebolla, extra término medio..." class="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
                             </div>
 
                             <button onclick="submitOrder()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs sm:text-sm transition shadow-md flex items-center justify-center gap-2">
-                                <i data-lucide="check-circle" class="w-4 h-4"></i> Confirmar y Enviar Pedido
+                                <i data-lucide="send" class="w-4 h-4"></i> <span id="submit-btn-text">Enviar Comanda a Cocina</span>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- STUDENT ORDERS TRACKING VIEW -->
+            <!-- WAITER ORDERS TRACKING VIEW -->
             <div id="student-orders-view" class="hidden">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
                     <h3 class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2">
-                        <i data-lucide="receipt" class="w-5 h-5 text-indigo-600"></i> Historial y Estatus de Pedidos
+                        <i data-lucide="receipt" class="w-5 h-5 text-indigo-600"></i> Comandas Activas de Mesas
                     </h3>
                     <div id="student-orders-list" class="space-y-3 sm:space-y-4"></div>
                 </div>
@@ -195,62 +212,73 @@
         <div id="admin-portal" class="hidden space-y-4 sm:space-y-6">
             <div class="flex border-b border-gray-200 bg-white rounded-xl shadow-sm p-1">
                 <button id="admin-tab-orders-btn" onclick="switchAdminTab('orders')" class="flex-1 py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition bg-indigo-50 text-indigo-700">
-                    <i data-lucide="kanban" class="w-4 h-4"></i> Tablero de Pedidos
+                    <i data-lucide="kanban" class="w-4 h-4"></i> Tablero de Pedidos (Cocina)
                 </button>
                 <button id="admin-tab-inventory-btn" onclick="switchAdminTab('inventory')" class="flex-1 py-2 px-3 sm:py-2.5 sm:px-4 rounded-lg font-semibold text-xs sm:text-sm text-gray-600 hover:text-indigo-600 flex items-center justify-center gap-1.5 transition">
                     <i data-lucide="sliders" class="w-4 h-4"></i> Gestor de Menú y Precios
                 </button>
             </div>
 
-            <!-- ADMIN TAB 1: KANBAN RESPONSIVO -->
+            <!-- ADMIN TAB 1: KANBAN DE COCINA -->
             <div id="admin-orders-tab-content">
                 <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-4 sm:mb-6">
                     <div>
-                        <h2 class="text-lg sm:text-xl font-bold text-gray-800">Control de Pedidos en Cocina</h2>
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-800">Control de Comandas en Cocina</h2>
                         <p class="text-[11px] sm:text-xs text-gray-500">Sincronización en tiempo real con Realtime Database</p>
                     </div>
-                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-                        <button onclick="exportOrdersToExcel()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition">
-                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Exportar Excel
+
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <!-- Botón de Ordenamiento -->
+                        <div class="flex items-center gap-1.5 bg-gray-100 px-2.5 py-1.5 rounded-xl border border-gray-200 text-xs font-medium">
+                            <i data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-indigo-600"></i>
+                            <span class="text-gray-600 text-[11px]">Orden:</span>
+                            <select id="order-sort-direction" onchange="changeOrderSort(this.value)" class="bg-transparent font-bold text-gray-800 focus:outline-none cursor-pointer">
+                                <option value="desc">Más reciente primero</option>
+                                <option value="asc">Más antiguo primero</option>
+                            </select>
+                        </div>
+
+                        <button onclick="exportOrdersToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Excel
                         </button>
-                        <button onclick="confirmClearAllOrders()" class="flex-1 sm:flex-none bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3 py-2 rounded-xl flex items-center justify-center gap-1.5 border border-red-200 transition">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Borrar Historial
+                        <button onclick="confirmClearAllOrders()" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center justify-center gap-1.5 border border-red-200 transition">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Borrar
                         </button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                     <!-- Pending -->
-                    <div class="bg-amber-50/60 rounded-2xl p-3 sm:p-4 border border-amber-200/60 flex flex-col min-h-[300px] md:min-h-[450px]">
-                        <div class="flex justify-between items-center mb-2.5 pb-2 border-b border-amber-200">
-                            <span class="font-bold text-xs sm:text-sm text-amber-900 flex items-center gap-2">
+                    <div class="bg-amber-50/60 rounded-xl p-2.5 sm:p-3 border border-amber-200/60 flex flex-col min-h-[300px] md:min-h-[450px]">
+                        <div class="flex justify-between items-center mb-2 pb-1.5 border-b border-amber-200">
+                            <span class="font-bold text-xs sm:text-sm text-amber-900 flex items-center gap-1.5">
                                 <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Pendientes
                             </span>
                             <span id="count-pending" class="bg-amber-200 text-amber-900 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
                         </div>
-                        <div id="col-pending" class="space-y-2.5 flex-1 overflow-y-auto max-h-[400px] md:max-h-[550px] pr-1"></div>
+                        <div id="col-pending" class="space-y-2 flex-1 overflow-y-auto max-h-[450px] md:max-h-[600px] pr-0.5"></div>
                     </div>
 
                     <!-- Preparing -->
-                    <div class="bg-blue-50/60 rounded-2xl p-3 sm:p-4 border border-blue-200/60 flex flex-col min-h-[300px] md:min-h-[450px]">
-                        <div class="flex justify-between items-center mb-2.5 pb-2 border-b border-blue-200">
-                            <span class="font-bold text-xs sm:text-sm text-blue-900 flex items-center gap-2">
+                    <div class="bg-blue-50/60 rounded-xl p-2.5 sm:p-3 border border-blue-200/60 flex flex-col min-h-[300px] md:min-h-[450px]">
+                        <div class="flex justify-between items-center mb-2 pb-1.5 border-b border-blue-200">
+                            <span class="font-bold text-xs sm:text-sm text-blue-900 flex items-center gap-1.5">
                                 <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> En Preparación
                             </span>
                             <span id="count-preparing" class="bg-blue-200 text-blue-900 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
                         </div>
-                        <div id="col-preparing" class="space-y-2.5 flex-1 overflow-y-auto max-h-[400px] md:max-h-[550px] pr-1"></div>
+                        <div id="col-preparing" class="space-y-2 flex-1 overflow-y-auto max-h-[450px] md:max-h-[600px] pr-0.5"></div>
                     </div>
 
                     <!-- Ready / Delivered -->
-                    <div class="bg-emerald-50/60 rounded-2xl p-3 sm:p-4 border border-emerald-200/60 flex flex-col min-h-[300px] md:min-h-[450px]">
-                        <div class="flex justify-between items-center mb-2.5 pb-2 border-b border-emerald-200">
-                            <span class="font-bold text-xs sm:text-sm text-emerald-900 flex items-center gap-2">
+                    <div class="bg-emerald-50/60 rounded-xl p-2.5 sm:p-3 border border-emerald-200/60 flex flex-col min-h-[300px] md:min-h-[450px]">
+                        <div class="flex justify-between items-center mb-2 pb-1.5 border-b border-emerald-200">
+                            <span class="font-bold text-xs sm:text-sm text-emerald-900 flex items-center gap-1.5">
                                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Listos / Entregados
                             </span>
                             <span id="count-ready" class="bg-emerald-200 text-emerald-900 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
                         </div>
-                        <div id="col-ready" class="space-y-2.5 flex-1 overflow-y-auto max-h-[400px] md:max-h-[550px] pr-1"></div>
+                        <div id="col-ready" class="space-y-2 flex-1 overflow-y-auto max-h-[450px] md:max-h-[600px] pr-0.5"></div>
                     </div>
                 </div>
             </div>
@@ -290,7 +318,7 @@
 
     </main>
 
-    <!-- MODAL CUSTOMIZE ITEM COMPACTO -->
+    <!-- MODAL CUSTOMIZE ITEM -->
     <div id="custom-item-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm sm:max-w-md w-full overflow-hidden shadow-2xl border border-gray-100 my-auto">
             <div class="relative h-32 sm:h-40 bg-gray-200">
@@ -317,7 +345,7 @@
 
                 <div>
                     <label class="block text-[11px] font-semibold text-gray-600 mb-0.5">Nota específica:</label>
-                    <input type="text" id="modal-item-note" placeholder="ej. Extra salsa, muy tostado..." class="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <input type="text" id="modal-item-note" placeholder="ej. Extra salsa, bien cocido..." class="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
 
                 <div class="flex items-center justify-between pt-1">
@@ -381,7 +409,7 @@
 
                 <div>
                     <label class="block font-semibold text-gray-700 mb-1">URL de la Foto</label>
-                    <input type="url" id="prod-image" required class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="https://images.unsplash.com/...">
+                    <input type="url" id="prod-image" required class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" placeholder="https://raw.githubusercontent.com/...">
                 </div>
 
                 <div>
@@ -424,7 +452,7 @@
         };
 
         const DEFAULT_USERS = {
-            'alumno123': { id: 'alumno123', name: 'Carlos Mendoza', role: 'student', pass: '123456' },
+            'mesero1': { id: 'mesero1', name: 'Carlos Mendoza', role: 'waiter', pass: '123456' },
             'admin': { id: 'admin', name: 'Chef María (Cocina)', role: 'admin', pass: 'admin123' }
         };
 
@@ -437,6 +465,8 @@
         let activeCategoryFilter = 'all';
         let currentModalItem = null;
         let modalQuantity = 1;
+        let orderSortDirection = 'desc'; 
+        let editingOrderId = null; 
 
         window.addEventListener('DOMContentLoaded', () => {
             initFirebaseRTDB();
@@ -466,7 +496,6 @@
         }
 
         function listenToRealtimeDB() {
-            // 1. Escuchar Menú
             rtdb.ref('cafeteria_menu').on('value', snapshot => {
                 const data = snapshot.val();
                 if (!data) {
@@ -478,11 +507,11 @@
                 }
             });
 
-            // 2. Escuchar Pedidos
             rtdb.ref('cafeteria_orders').on('value', snapshot => {
                 const data = snapshot.val();
                 if (data) {
-                    orders = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+                    orders = Object.values(data);
+                    sortOrdersArray();
                 } else {
                     orders = [];
                 }
@@ -492,7 +521,6 @@
                 }
             });
 
-            // 3. Escuchar Usuarios en DB
             rtdb.ref('cafeteria_users').on('value', snapshot => {
                 const data = snapshot.val();
                 if (!data) {
@@ -501,6 +529,22 @@
                     usersList = data;
                 }
             });
+        }
+
+        function sortOrdersArray() {
+            if (orderSortDirection === 'desc') {
+                orders.sort((a, b) => b.timestamp - a.timestamp);
+            } else {
+                orders.sort((a, b) => a.timestamp - b.timestamp);
+            }
+        }
+
+        function changeOrderSort(dir) {
+            orderSortDirection = dir;
+            sortOrdersArray();
+            if (currentUser && currentUser.role === 'admin') {
+                renderAdminOrders();
+            }
         }
 
         function switchAuthTab(tab) {
@@ -521,7 +565,7 @@
                 sessionStorage.setItem('campusbites_user', JSON.stringify(currentUser));
                 setupAuthenticatedUI();
             } else {
-                alert('Matrícula o contraseña incorrectos.');
+                alert('Usuario o contraseña incorrectos.');
             }
         }
 
@@ -533,7 +577,7 @@
             const pass = document.getElementById('reg-password').value;
 
             if (usersList[id]) {
-                alert('Esta matrícula o usuario ya está registrado en la base de datos.');
+                alert('Este usuario o ID ya está registrado.');
                 return;
             }
 
@@ -542,7 +586,7 @@
             rtdb.ref(`cafeteria_users/${id}`).set(newUser).then(() => {
                 currentUser = newUser;
                 sessionStorage.setItem('campusbites_user', JSON.stringify(currentUser));
-                alert('¡Cuenta creada y guardada en Firebase con éxito!');
+                alert('¡Cuenta creada con éxito!');
                 setupAuthenticatedUI();
             }).catch(err => {
                 alert('Error al registrar usuario: ' + err.message);
@@ -563,6 +607,7 @@
             sessionStorage.removeItem('campusbites_user');
             currentUser = null;
             cart = [];
+            cancelEditing();
             document.getElementById('user-info-bar').classList.add('hidden');
             showScreen('auth-screen');
         }
@@ -571,7 +616,7 @@
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('user-info-bar').classList.remove('hidden');
             document.getElementById('user-display-name').innerText = currentUser.name;
-            document.getElementById('user-display-role').innerText = currentUser.role === 'admin' ? 'Cocina' : 'Alumno';
+            document.getElementById('user-display-role').innerText = currentUser.role === 'admin' ? 'Cocina' : 'Mesero';
 
             if (currentUser.role === 'admin') {
                 showScreen('admin-portal');
@@ -582,7 +627,6 @@
                 renderStudentMenu();
                 renderCart();
                 renderStudentOrders();
-                setDefaultPickupTime();
             }
         }
 
@@ -610,7 +654,6 @@
             renderStudentMenu();
         }
 
-        // MENÚ CON TARJETAS MÁS PEQUEÑAS Y MÁS OPCIONES VISIBLES
         function renderStudentMenu() {
             const grid = document.getElementById('menu-grid');
             if (!grid) return;
@@ -642,7 +685,7 @@
                     </div>
                     <div class="p-2.5 sm:p-3 pt-0">
                         <button onclick="openCustomModal('${item.id}')" class="w-full bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white font-bold text-[11px] sm:text-xs py-1.5 px-2 rounded-lg transition flex items-center justify-center gap-1">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Pedir
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Agregar
                         </button>
                     </div>
                 `;
@@ -703,7 +746,7 @@
             const note = document.getElementById('modal-item-note').value.trim();
 
             cart.push({
-                cartId: 'cart_' + Date.now(),
+                cartId: 'cart_' + Date.now() + '_' + Math.floor(Math.random()*1000),
                 itemId: currentModalItem.id,
                 name: currentModalItem.name,
                 price: parseFloat(currentModalItem.price),
@@ -722,24 +765,24 @@
             container.innerHTML = '';
 
             if (cart.length === 0) {
-                container.innerHTML = `<div class="text-center py-4 text-gray-400 text-xs">Tu carrito está vacío.</div>`;
+                container.innerHTML = `<div class="text-center py-6 text-gray-400 text-xs">No hay platillos en este pedido.</div>`;
                 document.getElementById('cart-total-price').innerText = '$0.00';
                 return;
             }
 
             let total = 0;
             cart.forEach(item => {
-                const itemTotal = item.price * item.quantity;
+                const itemTotal = parseFloat(item.price) * parseInt(item.quantity);
                 total += itemTotal;
 
                 const div = document.createElement('div');
-                div.className = "bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-xs space-y-1";
+                div.className = "bg-white p-2.5 rounded-xl border border-gray-200 text-xs space-y-1 shadow-sm";
                 div.innerHTML = `
                     <div class="flex justify-between font-bold text-gray-800">
                         <span>${item.quantity}x ${item.name}</span>
                         <span class="text-indigo-600">$${itemTotal.toFixed(2)}</span>
                     </div>
-                    ${item.selectedOptions.length ? `<div class="text-gray-500 italic text-[11px]">Opción: ${item.selectedOptions.join(', ')}</div>` : ''}
+                    ${item.selectedOptions && item.selectedOptions.length ? `<div class="text-gray-500 italic text-[11px]">Opciones: ${item.selectedOptions.join(', ')}</div>` : ''}
                     ${item.note ? `<div class="text-amber-600 font-medium text-[11px]">Nota: ${item.note}</div>` : ''}
                     <div class="flex justify-end pt-0.5">
                         <button onclick="removeFromCart('${item.cartId}')" class="text-red-500 hover:text-red-700 text-[10px] font-semibold flex items-center gap-0.5">
@@ -764,42 +807,86 @@
             renderCart();
         }
 
-        function setDefaultPickupTime() {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() + 25);
-            const hours = String(now.getHours()).padStart(2, '0');
-            const mins = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('pickup-time').value = `${hours}:${mins}`;
+        // CORRECCIÓN EN EDITAR PEDIDO: Asignación limpia y recálculo total asegurado
+        function editOrder(orderId) {
+            const ord = orders.find(o => o.id === orderId);
+            if (!ord) return;
+
+            editingOrderId = ord.id;
+            
+            // Mapeo riguroso para asegurar que todos los artículos recuperados tengan cartId y propiedades correctas
+            cart = (ord.items || []).map((it, idx) => ({
+                cartId: it.cartId || ('edit_cart_' + Date.now() + '_' + idx),
+                itemId: it.itemId || 'p_gen',
+                name: it.name || 'Artículo',
+                price: parseFloat(it.price || 0),
+                quantity: parseInt(it.quantity || 1),
+                selectedOptions: it.selectedOptions || [],
+                note: it.note || ''
+            }));
+
+            document.getElementById('order-table').value = ord.tableNum || 'Mesa 1';
+            document.getElementById('order-notes').value = ord.notes || '';
+
+            // Activar UI de edición
+            document.getElementById('editing-banner').classList.remove('hidden');
+            document.getElementById('editing-order-id-label').innerText = '#' + ord.id;
+            document.getElementById('submit-btn-text').innerText = 'Guardar Cambios en Comanda';
+
+            switchStudentTab('menu');
+            
+            // Renderizar carrito para actualizar la sumatoria inmediatamente
+            renderCart();
+        }
+
+        function cancelEditing() {
+            editingOrderId = null;
+            cart = [];
+            document.getElementById('editing-banner').classList.add('hidden');
+            document.getElementById('submit-btn-text').innerText = 'Enviar Comanda a Cocina';
+            document.getElementById('order-notes').value = '';
+            renderCart();
         }
 
         function submitOrder() {
             if (cart.length === 0) { alert('Agrega productos al pedido.'); return; }
-            const pickupTime = document.getElementById('pickup-time').value;
-            if (!pickupTime) { alert('Selecciona la hora de entrega.'); return; }
-
+            
+            const tableNum = document.getElementById('order-table').value;
             const notes = document.getElementById('order-notes').value.trim();
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+            const total = cart.reduce((sum, item) => sum + (parseFloat(item.price) * parseInt(item.quantity)), 0);
+            
+            let orderId = editingOrderId;
+            let createdAtTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            let timestampVal = Date.now();
 
-            const newOrder = {
+            if (!orderId) {
+                orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+            } else {
+                const existing = orders.find(o => o.id === orderId);
+                if (existing) {
+                    createdAtTime = existing.createdAt;
+                    timestampVal = existing.timestamp;
+                }
+            }
+
+            const updatedOrder = {
                 id: orderId,
-                studentId: currentUser.id,
-                studentName: currentUser.name,
+                waiterId: currentUser.id,
+                waiterName: currentUser.name,
+                tableNum: tableNum,
                 items: cart,
                 total: total,
-                pickupTime: pickupTime,
                 notes: notes,
                 status: 'pending',
-                createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                timestamp: Date.now()
+                createdAt: createdAtTime,
+                timestamp: timestampVal
             };
 
-            rtdb.ref('cafeteria_orders/' + orderId).set(newOrder).then(() => {
-                alert(`¡Pedido #${orderId} enviado a la cafetería con éxito!`);
-                cart = [];
-                renderCart();
+            rtdb.ref('cafeteria_orders/' + orderId).set(updatedOrder).then(() => {
+                alert(editingOrderId ? `¡Comanda #${orderId} actualizada con éxito!` : `¡Comanda #${orderId} asignada a ${tableNum} enviada a cocina!`);
+                cancelEditing();
                 switchStudentTab('orders');
-            }).catch(err => alert("Error enviando pedido: " + err.message));
+            }).catch(err => alert("Error guardando pedido: " + err.message));
         }
 
         function renderStudentOrders() {
@@ -807,7 +894,7 @@
             if (!container) return;
             container.innerHTML = '';
 
-            const myOrders = orders.filter(o => o.studentId === currentUser.id);
+            const myOrders = orders.filter(o => o.waiterId === currentUser.id);
 
             const countBadge = document.getElementById('my-orders-count');
             if (myOrders.length > 0) {
@@ -818,7 +905,7 @@
             }
 
             if (myOrders.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-xs sm:text-sm">No has realizado ningún pedido aún.</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-xs sm:text-sm">No tienes comandas activas.</div>`;
                 return;
             }
 
@@ -827,45 +914,48 @@
                 card.className = "border border-gray-200 rounded-xl p-3 sm:p-4 bg-gray-50 space-y-2.5";
 
                 let statusBadge = '';
-                if (ord.status === 'pending') statusBadge = '<span class="bg-amber-100 text-amber-800 text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold">🟡 Recibido</span>';
+                if (ord.status === 'pending') statusBadge = '<span class="bg-amber-100 text-amber-800 text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold">🟡 Recibido en Cocina</span>';
                 else if (ord.status === 'preparing') statusBadge = '<span class="bg-blue-100 text-blue-800 text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold">🔵 En Preparación</span>';
-                else if (ord.status === 'ready') statusBadge = '<span class="bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold">🟢 Listo p/ Recoger</span>';
+                else if (ord.status === 'ready') statusBadge = '<span class="bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold">🟢 Listo p/ Llevar a Mesa</span>';
                 else if (ord.status === 'delivered') statusBadge = '<span class="bg-gray-200 text-gray-700 text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold">⚪ Entregado</span>';
 
-                const itemsSummary = ord.items.map(i => `${i.quantity}x ${i.name} ${i.selectedOptions && i.selectedOptions.length ? `(${i.selectedOptions.join(', ')})` : ''}`).join('<br>');
+                const itemsSummary = (ord.items || []).map(i => `${i.quantity}x ${i.name} ${i.selectedOptions && i.selectedOptions.length ? `(${i.selectedOptions.join(', ')})` : ''}`).join('<br>');
+
+                const canEdit = ord.status === 'pending' || ord.status === 'preparing';
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start border-b border-gray-200 pb-2">
                         <div>
-                            <span class="font-bold text-gray-800 text-sm sm:text-base">Pedido #${ord.id}</span>
-                            <p class="text-[11px] sm:text-xs text-gray-500">Hora solicitada: <b class="text-indigo-600">${ord.pickupTime} hrs</b></p>
+                            <span class="font-bold text-gray-800 text-sm sm:text-base">#${ord.id} - <span class="text-indigo-600">${ord.tableNum || 'Mesa'}</span></span>
+                            <p class="text-[11px] sm:text-xs text-gray-500">Hora: ${ord.createdAt}</p>
                         </div>
                         <div>${statusBadge}</div>
                     </div>
                     <div class="text-xs text-gray-700 bg-white p-2.5 rounded-lg border border-gray-100">${itemsSummary}</div>
-                    <div class="flex justify-between items-center text-[11px] sm:text-xs text-gray-500 pt-1">
-                        <span>Enviado: ${ord.createdAt}</span>
-                        <span class="font-bold text-xs sm:text-sm text-gray-900">Total: $${parseFloat(ord.total).toFixed(2)}</span>
+                    ${ord.notes ? `<div class="text-[11px] bg-amber-50 text-amber-800 p-1.5 rounded border border-amber-100"><b>Notas:</b> ${ord.notes}</div>` : ''}
+                    <div class="flex justify-between items-center text-xs pt-1">
+                        <span class="font-bold text-sm text-gray-900">Total: $${parseFloat(ord.total || 0).toFixed(2)}</span>
+                        ${canEdit ? `<button onclick="editOrder('${ord.id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 transition"><i data-lucide="edit" class="w-3.5 h-3.5"></i> Editar Pedido</button>` : `<span class="text-[11px] text-gray-400 italic">No modificable</span>`}
                     </div>
                 `;
                 container.appendChild(card);
             });
+            lucide.createIcons();
         }
 
-        // EXPORT ORDERS TO EXCEL (CSV)
         function exportOrdersToExcel() {
             if (orders.length === 0) {
                 alert("No hay pedidos registrados para exportar.");
                 return;
             }
 
-            let csvContent = "data:text/csv;charset=utf-8,ID Pedido,Alumno,Hora de Entrega,Total (MXN),Estatus,Notas del Pedido\n";
+            let csvContent = "data:text/csv;charset=utf-8,ID Pedido,Mesero,Mesa,Total (MXN),Estatus,Notas\n";
             
             orders.forEach(ord => {
                 let row = [
                     ord.id,
-                    `"${ord.studentName}"`,
-                    ord.pickupTime,
+                    `"${ord.waiterName || ''}"`,
+                    `"${ord.tableNum || ''}"`,
                     ord.total,
                     ord.status,
                     `"${(ord.notes || '').replace(/"/g, '""')}"`
@@ -876,31 +966,26 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "pedidos_cafeteria_" + new Date().toISOString().slice(0,10) + ".csv");
+            link.setAttribute("download", "comandas_mesas_" + new Date().toISOString().slice(0,10) + ".csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // CONFIRM & CLEAR ONLY ORDERS (LEAVES MENU INTACT)
         function confirmClearAllOrders() {
             if (orders.length === 0) {
                 alert("No hay pedidos para borrar.");
                 return;
             }
 
-            const confirmation = confirm("¿Estás seguro de borrar toda la información de los pedidos? Esta acción no se puede deshacer (el catálogo de precios y productos no se afectará).");
-            
+            const confirmation = confirm("¿Estás seguro de borrar toda la información de los pedidos?");
             if (confirmation) {
                 rtdb.ref('cafeteria_orders').remove().then(() => {
-                    alert("¡El historial de pedidos ha sido borrado con éxito!");
-                }).catch(err => {
-                    alert("Error al borrar los pedidos: " + err.message);
-                });
+                    alert("¡Historial borrado con éxito!");
+                }).catch(err => alert("Error: " + err.message));
             }
         }
 
-        // ADMIN FUNCTIONS
         function switchAdminTab(tab) {
             document.getElementById('admin-orders-tab-content').classList.toggle('hidden', tab !== 'orders');
             document.getElementById('admin-inventory-tab-content').classList.toggle('hidden', tab === 'orders');
@@ -921,29 +1006,34 @@
 
             orders.forEach(ord => {
                 const card = document.createElement('div');
-                card.className = "bg-white p-3 rounded-xl shadow-sm border border-gray-200 space-y-2.5";
+                card.className = "bg-white p-2.5 rounded-lg shadow-sm border border-gray-200 space-y-1.5 text-xs";
 
-                const itemsList = ord.items.map(i => `
-                    <div class="text-xs">
+                const itemsList = (ord.items || []).map(i => `
+                    <div class="text-[11px] leading-snug">
                         <span class="font-bold text-gray-800">${i.quantity}x ${i.name}</span>
                         ${i.selectedOptions && i.selectedOptions.length ? `<span class="text-indigo-600 font-medium"> [${i.selectedOptions.join(', ')}]</span>` : ''}
-                        ${i.note ? `<div class="text-amber-600 italic text-[11px]">Nota: "${i.note}"</div>` : ''}
+                        ${i.note ? `<div class="text-amber-600 italic text-[10px]">Nota: "${i.note}"</div>` : ''}
                     </div>
                 `).join('');
 
                 card.innerHTML = `
-                    <div class="flex justify-between items-start border-b border-gray-100 pb-2">
-                        <div>
-                            <span class="font-bold text-xs sm:text-sm text-gray-900">#${ord.id} - ${ord.studentName}</span>
-                            <div class="text-[11px] text-indigo-600 font-bold flex items-center gap-1 mt-0.5">
-                                <i data-lucide="clock" class="w-3 h-3"></i> Para: ${ord.pickupTime} hrs
+                    <div class="flex justify-between items-start border-b border-gray-100 pb-1">
+                        <div class="min-w-0 pr-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="bg-indigo-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded">${ord.tableNum || 'Mesa'}</span>
+                                <span class="font-bold text-xs text-gray-900 truncate">#${ord.id}</span>
+                            </div>
+                            <div class="text-[11px] text-gray-600 font-medium mt-0.5">
+                                Mesero: ${ord.waiterName || ''}
                             </div>
                         </div>
-                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">$${parseFloat(ord.total).toFixed(2)}</span>
+                        <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0">$${parseFloat(ord.total || 0).toFixed(2)}</span>
                     </div>
-                    <div class="space-y-1 bg-gray-50 p-2 rounded-lg border border-gray-100">${itemsList}</div>
-                    <div class="pt-0.5">
-                        <select onchange="updateOrderStatus('${ord.id}', this.value)" class="text-xs font-semibold px-2 py-1.5 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full">
+                    <div class="space-y-0.5 bg-gray-50/80 p-1.5 rounded border border-gray-100 max-h-28 overflow-y-auto">${itemsList}</div>
+                    ${ord.notes ? `<div class="text-[10px] bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-100 font-medium"><b>Nota gral:</b> ${ord.notes}</div>` : ''}
+                    <div class="pt-0.5 flex items-center justify-between gap-1">
+                        <span class="text-[10px] text-gray-400 shrink-0">${ord.createdAt}</span>
+                        <select onchange="updateOrderStatus('${ord.id}', this.value)" class="text-[11px] font-semibold px-2 py-1 rounded border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full cursor-pointer">
                             <option value="pending" ${ord.status === 'pending' ? 'selected' : ''}>🟡 Pendiente</option>
                             <option value="preparing" ${ord.status === 'preparing' ? 'selected' : ''}>🔵 En Preparación</option>
                             <option value="ready" ${ord.status === 'ready' ? 'selected' : ''}>🟢 Listo p/ Entrega</option>
